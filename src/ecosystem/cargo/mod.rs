@@ -534,6 +534,9 @@ fn add_arguments(change: &ProposedChange, workspace: &Workspace) -> Result<Vec<S
     if change.no_default_features {
         args.push("--no-default-features".to_string());
     }
+    if change.optional {
+        args.push("--optional".to_string());
+    }
     Ok(args)
 }
 

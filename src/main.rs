@@ -61,6 +61,9 @@ enum Command {
         /// Turn off the candidate's default features.
         #[arg(long)]
         no_default_features: bool,
+        /// Add the candidate as an optional dependency.
+        #[arg(long)]
+        optional: bool,
         /// The workspace member to add the dependency to.
         #[arg(long, short = 'p')]
         package: Option<String>,
@@ -403,6 +406,7 @@ fn run(cli: &Cli) -> Result<bool, Error> {
             candidates,
             features,
             no_default_features,
+            optional,
             package,
             ..
         } => {
@@ -411,6 +415,7 @@ fn run(cli: &Cli) -> Result<bool, Error> {
                 let mut change = ProposedChange::parse(candidate)?;
                 change.features = features.clone();
                 change.no_default_features = *no_default_features;
+                change.optional = *optional;
                 change.member = package.clone();
                 changes.push(change);
             }

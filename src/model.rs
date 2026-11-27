@@ -231,6 +231,9 @@ pub struct ProposedChange {
     pub features: Vec<String>,
     /// Whether to turn off the default features.
     pub no_default_features: bool,
+    /// Whether to add it as an optional dependency, off unless a feature
+    /// of the member turns it on.
+    pub optional: bool,
     /// The workspace member to change, when the workspace has several.
     pub member: Option<String>,
 }
@@ -259,6 +262,7 @@ impl ProposedChange {
             version: version.map(str::to_string),
             features: Vec::new(),
             no_default_features: false,
+            optional: false,
             member: None,
         })
     }
@@ -283,6 +287,9 @@ impl fmt::Display for ProposedChange {
         }
         if self.no_default_features {
             write!(f, " without default features")?;
+        }
+        if self.optional {
+            write!(f, " as an optional dependency")?;
         }
         Ok(())
     }
