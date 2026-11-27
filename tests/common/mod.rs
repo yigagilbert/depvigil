@@ -225,3 +225,49 @@ pub fn name_version(purl: &str) -> String {
     let (name, version) = rest.split_once('@').expect("versioned purl");
     format!("{name} {version}")
 }
+
+/// An engine on `dir` with the test Cargo home and a fixed clock.
+pub fn engine_at(dir: &Path, instant: &str) -> depvigil::Engine<CargoEcosystem> {
+    depvigil::Engine::new(cargo(), dir)
+        .with_clock(depvigil::time::Clock::fixed(instant).expect("valid instant"))
+}
+
+/// The result of running the `depvigil` binary.
+pub struct CliOutput {
+    pub code: i32,
+    pub stdout: String,
+    pub stderr: String,
+}
+
+impl CliOutput {
+    /// Standard output parsed as JSON.
+    pub fn json(&self) -> serde_json::Value {
+        serde_json::from_str(&self.stdout).unwrap_or_else(|e| {
+            panic!(
+                "stdout is not JSON ({e}):\n{}\nstderr:\n{}",
+                self.stdout, self.stderr
+            )
+        })
+    }
+}
+
+/// Runs the built `depvigil` binary on `project` with the test Cargo home
+/// and, when given, a fixed clock.
+pub fn run_cli(project: &Path, now: Option<&str>, args: &[&str]) -> CliOutput {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_depvigil"));
+    command
+        .arg("--project")
+        .arg(project)
+        .args(args)
+        .env("CARGO_HOME", cargo_home());
+    match now {
+        Some(now) => command.env("DEPVIGIL_NOW", now),
+        None => command.env_remove("DEPVIGIL_NOW"),
+    };
+    let output = command.output().expect("run depvigil");
+    CliOutput {
+        code: output.status.code().unwrap_or(-1),
+        stdout: String::from_utf8_lossy(&output.stdout).into_owned(),
+        stderr: String::from_utf8_lossy(&output.stderr).into_owned(),
+    }
+}
