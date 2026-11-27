@@ -18,6 +18,7 @@ profile.
 | `small` fixture | this repository, commit `b83155e` |
 | `public` fixture | `sharkdp/bat` v0.25.0, commit `25f4f96ea3afb6fe44552f3b38ed8b1540ffa1b3`, 208 locked packages |
 | `advisories` fixture | `rustsec/advisory-db`, `osv` branch, commit `41c52cdab5fd303310c06be767cd48ad14970be9` (2026-11-27T10:36:00Z), 1,552 advisories, downloaded 2026-11-27 |
+| `advisory-db` fixture | `rustsec/advisory-db`, `main` branch, commit `c5279d0b0c9e8b70df666eb6d1edbabcfd1176bd` (2026-11-27T10:35:42Z), pinned submodule, used by `cargo audit` as ground truth |
 
 Tests 1 and 3 were first run on Rust 1.88.0 with `relate` 1.2.0 and then
 re-run on the toolchain above. The earlier numbers are kept as notes under
@@ -424,6 +425,113 @@ lockfile first for the advisory check, `cargo metadata` only when the full
 graph is needed. This was measured on two cases only and is a suggestion, not
 a tested design.
 
+## Test 4: advisory matching and Living Approvals
+
+| Field | Content |
+| --- | --- |
+| Status | `PASS` |
+| Evidence | `cargo test --test t4_advisories -- --nocapture` in `phase0/`; test file `tests/t4_advisories.rs` |
+
+All data lives in one Relate directory store. Three snapshots of `small` are
+loaded: the baseline as committed, a target candidate (`either` added) and a
+control candidate (`either` added and `regex` raised to 1.5.5). The two
+candidates differ in exactly one version: `regex` 1.5.4 against 1.5.5.
+
+**Advisory data**
+
+`cargo audit` reads the advisory database in its own format, so the ground
+truth uses the `main` branch of `rustsec/advisory-db` at commit `c5279d0`,
+committed 18 seconds before the OSV export at `41c52cd`. The two sets were
+compared by advisory id:
+
+| Source | Advisories |
+| --- | --- |
+| OSV snapshot (`osv` branch) | 1,552, of which 25 withdrawn and 540 informational |
+| `advisory-db` checkout (`main` branch) | 1,551 |
+
+One advisory differs: `RUSTSEC-2025-0000` (`matrix-sdk-base`) is in the OSV
+export but has no file in the `main` checkout. It affects no package in
+either fixture. Every other id is in both.
+
+**Part A: advisory matching**
+
+| Check | Result |
+| --- | --- |
+| Matching | Pass. For the `small` baseline snapshot the graph gives the same three (advisory, package, version) triples as `cargo audit`: `RUSTSEC-2020-0071` `time` 0.1.43, `RUSTSEC-2021-0003` `smallvec` 1.6.0 and `RUSTSEC-2022-0013` `regex` 1.5.4. |
+| Informational notices, compared separately | Pass. Both report none for `small`. |
+
+The `small` fixture has only 15 packages, so the same evaluator was also run
+over whole lockfiles, without the graph, and compared with `cargo audit`:
+
+| Lockfile | Vulnerabilities (ours / `cargo audit`) | Informational notices (ours / `cargo audit`) | Agreement |
+| --- | --- | --- | --- |
+| `small` | 3 / 3 | 0 / 0 | Identical sets |
+| `public` (`bat`, 208 packages) | 6 / 6 | 7 / 7 | Identical sets |
+
+**Part B: invalidation**
+
+D is the publication date of `RUSTSEC-2022-0013`, 2022-03-08T12:00:00Z. Both
+approvals are dated 2022-03-07T12:00:00Z.
+
+| Check | Result |
+| --- | --- |
+| Target found | Pass. The query returns one row: `decision-target`, `RUSTSEC-2022-0013`, `pkg:cargo/regex@1.5.4`. Before the later advisories were loaded it returned nothing. |
+| Control safe | Pass. `decision-control` is not returned. Its snapshot still holds `smallvec` 1.6.0 and `time` 0.1.43, whose advisories were published before the approval, so the date filter is exercised too. |
+| History kept | Pass. The `Decision` node read back before and after is identical (same id, label and four properties), and exactly one `Invalidation` node points at it. |
+| Idempotent | Pass. A second run returns no rows and the store still holds one `Invalidation` node. |
+| Explained | Pass. The graph returns the path `small-app` 0.1.0 → `regex` 1.5.4, which exists in the target snapshot's `cargo metadata` output. |
+| Optional: withdrawal | Pass. After the advisory is marked withdrawn, `decision-target` is reported as valid again. The `Invalidation` node and the `Decision` node are left as they were. |
+
+**Numbers**
+
+| Measurement | Value |
+| --- | --- |
+| Advisories loaded | 1,552 (429 published before D, then 1,123) |
+| Advisory load time | 167.5 ms in total (46.1 ms and 121.4 ms) |
+| Matching time, range evaluation plus `AFFECTS` edges | 6.6 ms in total, 3 edges |
+| Invalidation query | 0.79 ms |
+| Explanation path query | 0.78 ms |
+
+Matching ran against the 17 distinct crates.io versions in the store, so the
+matching time says little about a large graph.
+
+**Surprises**
+
+- Relate accepted `datetime()` on OSV timestamps, `datetime(null)` for a
+  missing `withdrawn` date, date arithmetic (`datetime($d) - duration('P1D')`)
+  and comparison between stored datetimes.
+- The draft schema cannot answer "which versions are the project root" from
+  the graph alone. The loader adds a `(Snapshot)-[:HAS_ROOT]->(Version)` edge
+  for each workspace member, and the explanation query starts there.
+- The OSV export and the `main` branch differ by one advisory even though
+  they were committed 18 seconds apart.
+- In the RustSec OSV export every advisory has one affected package, one
+  `SEMVER` range and only `introduced` and `fixed` events. The evaluator
+  rejects anything else instead of guessing.
+
+**Design answer: which code evaluates OSV version ranges.** Our own
+evaluator, about 15 lines in `tests/t4_advisories.rs` (`in_range`), using the
+`semver` crate for version ordering. It walks a range's events in version
+order: an `introduced` at or below the version turns "affected" on and a
+`fixed` at or below it turns it off. It agreed with `cargo audit` on every
+finding in both lockfiles: 9 vulnerabilities and 7 notices across 223
+packages. That is a small sample, and none of the affected versions was a
+pre-release, so pre-release ordering is untested.
+
+**Design notes for the build**
+
+- The brief's invalidation sketch skips a decision once any `Invalidation`
+  points at it. A second advisory that later affects the same approval would
+  then go unrecorded. Checking for an existing invalidation per decision and
+  advisory pair would avoid that. This was not tested.
+- The sketch does not look at the advisory type, so an informational notice
+  such as "unmaintained" would invalidate an approval just as a vulnerability
+  does. The loader stores the type in an `informational` property so a policy
+  can decide.
+- An advisory against a version that is in the lockfile but not in the
+  resolve graph is seen by `cargo audit` and not by a graph built from
+  `cargo metadata`. `small` has no such package, so this did not show here.
+
 ## Authorship log
 
 Kept for the AI-use disclosure the hackathon rules require.
@@ -433,4 +541,4 @@ Kept for the AI-use disclosure the hackathon rules require.
 | `PHASE0_BRIEF.md` | Project author |
 | `phase0/` crate, tests, helper binary and `small` fixture | Coding agent (Claude Code), directed and reviewed by the project author |
 | `RESULTS.md` | Coding agent, from test output |
-| `fixtures/public`, `fixtures/advisories/crates` | Third-party data, unmodified |
+| `fixtures/public`, `fixtures/advisory-db`, `fixtures/advisories/crates` | Third-party data, unmodified |

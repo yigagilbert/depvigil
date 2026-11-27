@@ -201,6 +201,15 @@ MERGE (p:Package {purl: row.package})
 MERGE (v)-[:OF]->(p)
 MERGE (s)-[:INCLUDES]->(v)";
 
+/// Schema addition found necessary in Test 4: the draft schema has no way to
+/// find a snapshot's workspace members, which a "path from the project root"
+/// needs.
+const LOAD_ROOTS: &str = "
+MATCH (s:Snapshot {id: $snapshot})
+UNWIND $roots AS purl
+MATCH (v:Version {purl: purl})
+MERGE (s)-[:HAS_ROOT]->(v)";
+
 const LOAD_EDGES: &str = "
 UNWIND $edges AS edge
 MATCH (a:Version {purl: edge.from})
@@ -265,6 +274,13 @@ pub fn load_snapshot(
         params([("snapshot", text(id)), ("versions", Value::List(versions.into()))]),
     )
     .expect("load versions");
+
+    let roots: Vec<Value> = data.roots.iter().map(|purl| text(purl)).collect();
+    conn.query_with_params(
+        LOAD_ROOTS,
+        params([("snapshot", text(id)), ("roots", Value::List(roots.into()))]),
+    )
+    .expect("load roots");
 
     let edges: Vec<Value> = data
         .edges

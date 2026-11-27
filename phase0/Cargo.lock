@@ -843,6 +843,7 @@ name = "phase0"
 version = "0.0.0"
 dependencies = [
  "relate",
+ "semver",
  "serde_json",
  "sha2",
  "tempfile",
