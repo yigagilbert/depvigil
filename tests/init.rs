@@ -176,3 +176,28 @@ fn the_store_does_not_depend_on_the_directory_name() {
     assert_eq!(second.project, first.project);
     assert_eq!(second.snapshot, first.snapshot);
 }
+
+#[test]
+fn another_process_can_read_but_not_write_while_the_store_is_held() {
+    // Phase 0 Test 1 across a real process boundary: this process holds the
+    // store for writing while the depvigil binary runs beside it.
+    let fixture = require_fixture!("small");
+    let project = project_from(&fixture);
+    engine_at(&project.dir, T0).init().expect("init");
+    let _writer = Store::open(&project.dir).expect("writer");
+
+    let reader = common::run_cli(&project.dir, None, &["log"]);
+    assert_eq!(
+        reader.code, 0,
+        "a read-only command works beside the writer: {}",
+        reader.stderr
+    );
+
+    let second_writer = common::run_cli(&project.dir, None, &["recheck"]);
+    assert_eq!(second_writer.code, 4);
+    assert!(
+        second_writer.stderr.contains("in use by another process"),
+        "{}",
+        second_writer.stderr
+    );
+}

@@ -15,7 +15,7 @@ publish = false
 # part of this crate.
 [workspace]
 resolver = "3"
-exclude = ["fixtures", "phase0"]
+exclude = ["fixtures"]
 
 [lib]
 name = "depvigil"

@@ -1,6 +1,5 @@
 # Cargo build output
 /target
-/phase0/target
 **/*.rs.bk
 *.pdb
 rustc-ice-*.txt
