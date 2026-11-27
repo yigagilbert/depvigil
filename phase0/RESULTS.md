@@ -167,6 +167,82 @@ behaviour. Write 146.1 ms (`.rl`) and 132.0 ms (directory); sizes identical at
   The test exercised `Writable`, `ReadOnly` and `Follow`. `Ephemeral` and
   `Database::clone` are described from the Relate docs and were not run.
 
+## Test 2: two snapshots and a Cypher diff
+
+| Field | Content |
+| --- | --- |
+| Status | `PASS` |
+| Evidence | `cargo test --test t2_snapshots -- --nocapture` in `phase0/`; test file `tests/t2_snapshots.rs`, loader in `tests/common/graph.rs` |
+
+Snapshot A is `bat` v0.25.0 as committed. Snapshot B is a second copy with
+one requirement changed by hand, `git2` from `"0.19"` to `"0.20"`. Both were
+resolved with `cargo metadata` in temporary copies and loaded into one Relate
+directory store.
+
+| Snapshot | Versions | `DEPENDS_ON` edges |
+| --- | --- | --- |
+| A, baseline | 199 | 361 |
+| B, candidate | 220 | 428 |
+
+**Pass criteria**
+
+| Check | Result |
+| --- | --- |
+| Added, removed, changed | Pass. Cypher returns exactly the plain-Rust sets: 33 versions added, 12 removed, 8 packages changed. |
+| Path | Pass. Every returned path starts at the workspace root, ends at the target, exists edge by edge in snapshot B's `cargo metadata` output, and uses only edges whose `snapshot` property is B. |
+| Shared nodes | Pass. The store holds 232 `Version` nodes for 232 distinct versions across both snapshots. 187 of them are included by both snapshots, each as one node. |
+| Speed | Pass. Every diff query returned in under 5 ms. |
+
+The eight changed packages are `form_urlencoded`, `git2`, `idna`,
+`libgit2-sys`, `percent-encoding`, `quote`, `smallvec` and `url`.
+
+**Numbers**
+
+| Measurement | Value |
+| --- | --- |
+| Load snapshot A (one transaction) | 123.1 ms |
+| Load snapshot B (one transaction) | 133.8 ms |
+| Store size with one snapshot, after a checkpoint | 35,822 bytes |
+| Store size with two snapshots, after a checkpoint | 46,909 bytes |
+| Added query | 4.68 ms |
+| Removed query | 3.00 ms |
+| Changed query | 4.70 ms |
+| Path query, property map on the variable-length edge, `LIMIT 5` | 14.70 ms, 5 paths |
+| Path query, `SHORTEST 1` with a quantified path pattern | 60.24 ms, 1 path |
+
+The path question was "why is `displaydoc` 0.2.7 in the candidate?". The
+shortest answer has six edges: `bat` → `git2` 0.20.4 → `url` 2.5.9 → `idna`
+1.1.0 → `idna_adapter` 1.2.2 → `icu_properties` 2.4.0 → `displaydoc` 0.2.7.
+
+**Surprises**
+
+- The brief's two query sketches ran on Relate unchanged, including the
+  property map on a variable-length relationship
+  (`-[:DEPENDS_ON*1..25 {snapshot: $cand}]->`).
+- Changing one requirement moved far more than one package: 33 versions
+  added and 12 removed, because the new `git2` pulled a newer `url` and with
+  it the `icu_*` crates, and raised `quote` and `smallvec`.
+- `SHORTEST 1` was about four times slower than the plain variable-length
+  match with `LIMIT 5`, though still far under the limit.
+- `cargo metadata` gives no checksums. The loader takes them from
+  `Cargo.lock`.
+- Snapshot A has 199 resolved versions while the same `Cargo.lock` lists 208
+  packages. This is the lockfile-superset effect described under Test 3.
+
+**Design decision: keep the `snapshot` property on `DEPENDS_ON`.**
+
+Filtering on the property inside a variable-length path is accepted by
+Relate, returns only edges of the requested snapshot, and takes 15 ms on a
+store with two snapshots of about 200 packages each. Versions stay shared
+between snapshots, so a second snapshot added 11,087 bytes to a 35,822-byte
+store. The fallback of a separate edge type or node per snapshot was not
+built or measured, because the property approach met every criterion. One
+edge per dependency kind (`normal`, `dev`, `build`) is stored, with the kind
+in the `kind` property.
+
+Not measured: how the path query behaves with many snapshots in one store,
+or on a graph much larger than 220 packages.
+
 ## Test 3: isolated candidate resolution (gate)
 
 | Field | Content |
