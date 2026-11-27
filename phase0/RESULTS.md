@@ -230,6 +230,11 @@ shortest answer has six edges: `bat` → `git2` 0.20.4 → `url` 2.5.9 → `idna
 - Snapshot A has 199 resolved versions while the same `Cargo.lock` lists 208
   packages. This is the lockfile-superset effect described under Test 3.
 
+**Sanity check: the test can fail.** One expected version was changed on
+purpose (`git2` 0.20.4 to 0.20.3 in the plain-Rust "added" set). The test then
+failed with `FAIL added: Cypher equals plain Rust`, while the other eleven
+checks still passed. The change was reverted.
+
 **Design decision: keep the `snapshot` property on `DEPENDS_ON`.**
 
 Filtering on the property inside a variable-length path is accepted by
@@ -425,6 +430,28 @@ lockfile first for the advisory check, `cargo metadata` only when the full
 graph is needed. This was measured on two cases only and is a suggestion, not
 a tested design.
 
+### Follow-up test: the lockfile contains the resolve set
+
+Evidence: `cargo test --test t3_lockfile_superset -- --nocapture`, test file
+`tests/t3_lockfile_superset.rs`. Status: pass on all six Test 3 cases.
+
+For each case the change is applied in a manifest-only copy, the `Cargo.lock`
+it wrote is read, and `cargo metadata` is then run in the same copy. The test
+asserts that every package of the resolve set (by name, version and source)
+is in that lockfile, and that `cargo metadata` did not rewrite the lockfile.
+
+| # | Lockfile packages | Resolve set | Lockfile only | Missing from lockfile |
+| --- | --- | --- | --- | --- |
+| 1 | 17 | 17 | 0 | 0 |
+| 2 | 15 | 15 | 0 | 0 |
+| 3 | 21 | 21 | 0 | 0 |
+| 4 | 16 | 16 | 0 | 0 |
+| 5 | 210 | 201 | 9 | 0 |
+| extra | 15 | 15 | 0 | 0 |
+
+The extra case uses `cargo update --precise` instead of `cargo add`. This is
+the property the two-step simulation in `DECISIONS.md` relies on.
+
 ## Test 4: advisory matching and Living Approvals
 
 | Field | Content |
@@ -508,6 +535,15 @@ the matching time says little about a large graph.
 - In the RustSec OSV export every advisory has one affected package, one
   `SEMVER` range and only `introduced` and `fixed` events. The evaluator
   rejects anything else instead of guessing.
+
+**Sanity check: the test can fail.** The target advisory
+`RUSTSEC-2022-0013` was left out of the second advisory batch on purpose. The
+test then failed on seven of its fifteen checks: every advisory loaded,
+target found, history kept, idempotent, explained, graph vulnerabilities
+equal `cargo audit` (which still reported the `regex` finding), and the
+optional withdrawal check. Control safe and the lockfile-level evaluator
+comparisons, which do not go through the store, still passed. The change was
+reverted.
 
 **Design answer: which code evaluates OSV version ranges.** Our own
 evaluator, about 15 lines in `tests/t4_advisories.rs` (`in_range`), using the
@@ -647,7 +683,8 @@ URL or temporary directory name appears in the list.
 Tests 1 to 5 pass, so the decision table gives: **start the full build with
 the frozen P0 scope.** Approval binding stays in P0.
 
-Points to settle when the build starts, none of which blocks it:
+These points were open at the end of Phase 0. They are now decided in
+[`DECISIONS.md`](../DECISIONS.md):
 
 1. Relate 1.3.0 needs Rust 1.99 or later. The toolchain is pinned to 1.100.0
    in `rust-toolchain.toml`.
@@ -672,4 +709,5 @@ Kept for the AI-use disclosure the hackathon rules require.
 | `PHASE0_BRIEF.md` | Project author |
 | `phase0/` crate, tests, helper binary and `small` fixture | Coding agent (Claude Code), directed and reviewed by the project author |
 | `RESULTS.md` | Coding agent, from test output |
+| `DECISIONS.md` | Decisions by the project author; written up by the coding agent |
 | `fixtures/public`, `fixtures/advisory-db`, `fixtures/advisories/crates` | Third-party data, unmodified |

@@ -520,9 +520,10 @@ fn t4_advisory_matching_and_living_approvals() {
     let published = conn
         .query_with_params(ADVISORY_DATE, params([("id", text(TARGET_ADVISORY))]))
         .expect("advisory date")
-        .rows[0][0]
-        .as_string()
-        .unwrap_or("?")
+        .rows
+        .first()
+        .and_then(|row| row[0].as_string())
+        .unwrap_or("not loaded")
         .to_string();
     println!(
         "[t4] store now holds {advisory_count} advisories and {affects_count} AFFECTS edges; total advisory load {:?}, total matching {:?}; {TARGET_ADVISORY} published {published}",

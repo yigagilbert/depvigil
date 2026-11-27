@@ -7,6 +7,7 @@
 
 #![allow(dead_code)]
 
+pub mod cases;
 pub mod graph;
 
 use std::collections::BTreeSet;
