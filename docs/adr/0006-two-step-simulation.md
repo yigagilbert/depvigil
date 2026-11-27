@@ -1,6 +1,6 @@
 # 0006. Simulate a change in two steps
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-27
 
 ## Context
@@ -21,7 +21,8 @@ A dependency change is simulated in a manifest-only temporary copy:
 - A clean candidate is approved without downloading any crate archive.
 - A candidate approved by the fast step has lockfile edges only.
 - `--filter-platform` would hide advisories against packages used on other platforms. `cargo generate-lockfile` discards the existing lockfile, so its result does not describe the real change.
+- This milestone simulates `cargo add` only. `cargo update --precise` was shown to work in Phase 0 but is not offered by `check` yet.
 
 ## Evidence
 
-Phase 0 Test 3, the optional measurements and the lockfile-superset test. The two steps as one flow are not yet tested.
+`tests/check.rs`: a clean candidate is approved with `cargo add` as the only Cargo command; a policy hit runs `cargo metadata`. `tests/ecosystem.rs`: the isolated result equals a full checkout, and the lockfile contains the resolve set.

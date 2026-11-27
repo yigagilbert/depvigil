@@ -1,6 +1,6 @@
 # 0003. Bind approvals with a digest over packages, edges and declared dependencies
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-27
 
 ## Context
@@ -26,4 +26,4 @@ Path dependencies appear as `path:<manifest directory relative to the workspace 
 
 ## Evidence
 
-Phase 0 Test 5 (package list only). The amended form is not yet tested.
+`tests/verify.rs`: exact application and a checkout in another directory match; a different version, an extra crate, the approved crate on the wrong member and a changed feature set all mismatch and are named. `tests/ecosystem.rs`: one digest for the lockfile and the full view, with no absolute path in the canonical text.

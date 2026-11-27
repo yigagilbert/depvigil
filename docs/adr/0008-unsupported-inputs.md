@@ -1,6 +1,6 @@
 # 0008. Detect and report unsupported inputs
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-27
 
 ## Context
@@ -21,4 +21,4 @@ The following are detected and reported as unsupported. They are never resolved 
 
 ## Evidence
 
-Phase 0 Test 3, "Not covered by these cases". The detection is not yet tested.
+`tests/ecosystem.rs` and `tests/check.rs`: each of the three inputs is detected, named and refused with exit code 3 before any Cargo command runs.

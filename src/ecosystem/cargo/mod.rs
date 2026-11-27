@@ -609,3 +609,34 @@ impl Ecosystem for CargoEcosystem {
             .unwrap_or_default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_resolution_subcommands_can_run() {
+        let cargo = CargoEcosystem::new();
+        let dir = std::env::temp_dir();
+        for forbidden in [
+            "build",
+            "check",
+            "test",
+            "run",
+            "generate-lockfile",
+            "install",
+            "publish",
+        ] {
+            match cargo.cargo(&dir, &[forbidden.to_string()]) {
+                Err(Error::ToolNotAllowed(command)) => {
+                    assert_eq!(command, format!("cargo {forbidden}"))
+                }
+                other => panic!("`cargo {forbidden}` must be refused, got {other:?}"),
+            }
+        }
+        assert!(
+            cargo.tool_invocations().is_empty(),
+            "a refused command is never started"
+        );
+    }
+}

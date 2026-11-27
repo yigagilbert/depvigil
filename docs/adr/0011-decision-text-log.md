@@ -1,6 +1,6 @@
 # 0011. Mirror decisions in a text log
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-27
 
 ## Context
@@ -18,4 +18,4 @@ Each time a `Decision` or `Invalidation` is written, one line is appended to `.d
 
 ## Evidence
 
-Not yet tested.
+`tests/check.rs` and `tests/recheck.rs`: decisions and invalidations appear in the text log and agree with the store. `tests/self_governance.rs` checks the same for this repository's own store.

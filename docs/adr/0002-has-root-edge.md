@@ -18,4 +18,4 @@ Every snapshot has a `(Snapshot)-[:HAS_ROOT]->(Version)` edge to each workspace 
 
 ## Evidence
 
-Phase 0 Test 4.
+Phase 0 Test 4; `tests/init.rs` (root counts), `tests/check.rs`, `tests/recheck.rs` and `tests/history.rs` (paths start from `HAS_ROOT`).

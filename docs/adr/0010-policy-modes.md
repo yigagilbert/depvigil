@@ -1,6 +1,6 @@
 # 0010. Reject only vulnerabilities a candidate introduces, with a strict mode
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-27
 
 ## Context
@@ -22,4 +22,4 @@ Notices warn in both modes.
 
 ## Evidence
 
-Not yet tested.
+`tests/check.rs`: baseline findings are context, a removed vulnerability is an improvement, and strict mode rejects on any vulnerability.

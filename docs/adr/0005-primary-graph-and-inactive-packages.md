@@ -1,6 +1,6 @@
 # 0005. Use the cargo metadata resolve graph as the primary graph and keep lockfile-only packages as inactive
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-27
 
 ## Context
@@ -15,7 +15,8 @@ The resolve graph from `cargo metadata`, for all platforms, is the primary depen
 
 - A finding on an inactive package is reported as a warning, not a rejection.
 - Activity is known only for snapshots resolved with `cargo metadata`. A snapshot built from the lockfile alone records no activity.
+- Lockfile-only packages come from a workspace member's optional dependencies. An optional dependency of a registry crate that nothing enables is not locked at all.
 
 ## Evidence
 
-Phase 0 Tests 2 and 3. Storing and flagging inactive packages is not yet tested.
+`tests/init.rs`: `bat` is stored with 208 packages, 199 active and 9 inactive, and its edge count equals `cargo metadata`. `tests/check.rs`: a hit on an inactive package warns.

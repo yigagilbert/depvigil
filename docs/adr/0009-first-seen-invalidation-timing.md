@@ -1,6 +1,6 @@
 # 0009. Time invalidations by when an advisory first affected a version
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-27
 
 ## Context
@@ -21,4 +21,4 @@ Comparing an advisory's publication date with the decision date misses real case
 
 ## Evidence
 
-Not yet tested.
+`tests/advisories.rs`: first-seen times are set once and never moved, and an edited advisory gains and loses versions. `tests/recheck.rs`: the rule invalidates on first-seen time while showing the publication date, and each decision links to its advisory load.

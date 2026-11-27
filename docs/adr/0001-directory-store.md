@@ -19,4 +19,4 @@ The graph lives in a Relate directory store at `.depvigil/store` inside the proj
 
 ## Evidence
 
-Phase 0 Test 1; `tests/store.rs`.
+Phase 0 Test 1; `tests/init.rs` (one writer, readers beside it, within one process and across two).

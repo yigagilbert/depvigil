@@ -18,4 +18,4 @@ The RustSec OSV export is the only advisory source in the product. `cargo audit`
 
 ## Evidence
 
-Phase 0 Test 4, Part A.
+Phase 0 Test 4, Part A; `tests/advisories.rs` (findings equal `cargo audit` on both fixtures).
