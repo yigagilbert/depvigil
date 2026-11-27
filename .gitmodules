@@ -1,0 +1,3 @@
+[submodule "phase0/fixtures/public"]
+	path = phase0/fixtures/public
+	url = https://github.com/sharkdp/bat.git

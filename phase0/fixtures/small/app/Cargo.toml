@@ -1,0 +1,11 @@
+[package]
+name = "small-app"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+small-core = { path = "../core" }
+regex = "=1.5.4"
+smallvec = "=1.6.0"
+itoa = "1"

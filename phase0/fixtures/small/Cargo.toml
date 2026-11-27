@@ -1,0 +1,8 @@
+# Fixture workspace for the Phase 0 feasibility tests.
+# Never build this workspace: two dependencies are deliberately pinned to
+# versions with known RustSec advisories, and vendor/marker has a build
+# script that writes a marker file if it ever runs.
+[workspace]
+resolver = "2"
+members = ["app", "core"]
+exclude = ["vendor/marker"]
