@@ -492,8 +492,8 @@ approvals are dated 2022-03-07T12:00:00Z.
 | Invalidation query | 0.79 ms |
 | Explanation path query | 0.78 ms |
 
-Matching ran against the 17 distinct crates.io versions in the store, so the
-matching time says little about a large graph.
+Matching ran against a store that holds only three snapshots of `small`, so
+the matching time says little about a large graph.
 
 **Surprises**
 
@@ -514,8 +514,8 @@ evaluator, about 15 lines in `tests/t4_advisories.rs` (`in_range`), using the
 `semver` crate for version ordering. It walks a range's events in version
 order: an `introduced` at or below the version turns "affected" on and a
 `fixed` at or below it turns it off. It agreed with `cargo audit` on every
-finding in both lockfiles: 9 vulnerabilities and 7 notices across 223
-packages. That is a small sample, and none of the affected versions was a
+finding in both lockfiles: 9 vulnerabilities and 7 notices across lockfiles
+of 15 and 208 packages. That is a small sample, and none of the affected versions was a
 pre-release, so pre-release ordering is untested.
 
 **Design notes for the build**
