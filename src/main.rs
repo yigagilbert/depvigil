@@ -327,19 +327,17 @@ fn print_log(entries: &[LogEntry]) {
         println!("No decisions yet.");
     }
     for entry in entries {
-        let invalidated = if entry.invalidated_by.is_empty() {
-            String::new()
-        } else {
-            format!(" by {}", entry.invalidated_by.join(", "))
+        // A rejection has no standing to report beyond its verdict.
+        let standing = match entry.status {
+            DecisionStatus::Rejected => String::new(),
+            DecisionStatus::Invalidated => {
+                format!("  invalidated by {}", entry.invalidated_by.join(", "))
+            }
+            status => format!("  {}", status.as_str()),
         };
         println!(
-            "{}  {}  {:<8}  {}{}  {}",
-            entry.id,
-            entry.decided_at,
-            entry.verdict,
-            entry.status.as_str(),
-            invalidated,
-            entry.change
+            "{}  {}  {}{}  {}",
+            entry.id, entry.decided_at, entry.verdict, standing, entry.change
         );
     }
 }
