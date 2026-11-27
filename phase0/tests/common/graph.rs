@@ -216,6 +216,28 @@ MATCH (a:Version {purl: edge.from})
 MATCH (b:Version {purl: edge.to})
 CREATE (a)-[:DEPENDS_ON {snapshot: $snapshot, kind: edge.kind}]->(b)";
 
+// ---- Snapshot diff (validated in Test 2, reused in Test 5) -----------------
+
+/// Versions in the candidate that are not in the baseline.
+pub const DIFF_ADDED: &str = "
+MATCH (:Snapshot {id: $cand})-[:INCLUDES]->(v:Version)
+WHERE NOT EXISTS { (:Snapshot {id: $base})-[:INCLUDES]->(v) }
+RETURN v.purl AS purl ORDER BY purl";
+
+/// Versions in the baseline that are not in the candidate.
+pub const DIFF_REMOVED: &str = "
+MATCH (:Snapshot {id: $base})-[:INCLUDES]->(v:Version)
+WHERE NOT EXISTS { (:Snapshot {id: $cand})-[:INCLUDES]->(v) }
+RETURN v.purl AS purl ORDER BY purl";
+
+/// Packages present in both snapshots at different versions.
+pub const DIFF_CHANGED: &str = "
+MATCH (:Snapshot {id: $base})-[:INCLUDES]->(old:Version)-[:OF]->(p:Package),
+      (:Snapshot {id: $cand})-[:INCLUDES]->(new:Version)-[:OF]->(p)
+WHERE NOT EXISTS { (:Snapshot {id: $cand})-[:INCLUDES]->(old) }
+  AND NOT EXISTS { (:Snapshot {id: $base})-[:INCLUDES]->(new) }
+RETURN p.purl + ' ' + old.purl + ' -> ' + new.purl AS change ORDER BY change";
+
 pub fn text(value: &str) -> Value {
     Value::String(value.into())
 }

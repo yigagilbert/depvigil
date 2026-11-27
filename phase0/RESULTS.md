@@ -532,6 +532,137 @@ pre-release, so pre-release ordering is untested.
   resolve graph is seen by `cargo audit` and not by a graph built from
   `cargo metadata`. `small` has no such package, so this did not show here.
 
+## Test 5: approval binding and drift detection
+
+| Field | Content |
+| --- | --- |
+| Status | `PASS` |
+| Evidence | `cargo test --test t5_binding -- --nocapture` in `phase0/`; test file `tests/t5_binding.rs`, digest in `tests/common/graph.rs` (`canonical_list`, `digest`) |
+
+The approved change is `cargo add either@=1.13.0 -p small-core`. It is
+simulated in a manifest-only copy as in Test 3, and its digest is stored on
+the `Snapshot` and on the `Decision`. Each case then applies a change to a
+full copy of `small`, recomputes the digest from `cargo metadata`, and
+compares it with the digest read back from the `Decision`.
+
+**Cases**
+
+| # | Situation | Expected | Result |
+| --- | --- | --- | --- |
+| 1 | The approved change is applied exactly | Match | Match, `770aad93…0df23221` |
+| 2 | `either` 1.12.0 is applied instead of 1.13.0 | Mismatch, package named | Mismatch. The diff reports `changed: either 1.13.0 -> 1.12.0`. |
+| 3 | `hex` 0.4.3 is added as well | Mismatch, extra crate named | Mismatch. The diff reports `added: hex 0.4.3`. |
+| 4 | The approved state in a different, deeper directory | Match | Match, the same digest |
+
+**Pass criteria**
+
+| Check | Result |
+| --- | --- |
+| Cases | Pass, 4 of 4. |
+| Explanation | Pass. Both mismatches load the observed state as a snapshot and run the Test 2 diff queries against the approved snapshot, which name the differing package. |
+| Stability | Pass. Ten recomputations from ten `cargo metadata` runs give one value. |
+
+The digest computed in the manifest-only simulation equals the digest of the
+full checkout in case 1, so an approval made on a simulation binds the real
+workspace.
+
+**Numbers** (`public` fixture, 199 resolved packages)
+
+| Measurement | Value |
+| --- | --- |
+| Canonical list plus SHA-256 | 0.34 ms |
+| `cargo metadata` plus parsing, warm cache | 247 ms |
+
+**Surprise: the digest does not cover dependency edges.** As an extra
+observation, the approved crate was added to the other workspace member
+(`small-app` instead of `small-core`). The package list is identical, so the
+digest matches, although the dependency edges differ: `small-app` → `either`
+exists only in the applied state. The digest specified in the brief detects a
+different set of packages, not a different shape of graph. The same would
+hold for a change in enabled features.
+
+**Design answer: how path dependencies are normalised in the digest.**
+Each canonical line is `name version source checksum`. For a registry package
+the source is Cargo's source string and the checksum comes from `Cargo.lock`.
+For a path dependency the source is `path:` followed by the directory of its
+manifest relative to the workspace root, for example `path:app` or
+`path:vendor/marker`, and the checksum is empty. The relative directory comes
+from the `manifest_path` field of `cargo metadata` after the absolute
+workspace root is removed. Package ids are not used, because they embed an
+absolute `file://` path. The test asserts that no absolute path, `file://`
+URL or temporary directory name appears in the list.
+
+**Design notes for the build**
+
+- If an approval should also bind where a dependency is attached and which
+  features are on, the canonical list needs the resolved edges and feature
+  sets as well. Both are already in the `cargo metadata` output.
+- The digest is computed from `cargo metadata`, so it covers the resolve
+  graph and not lockfile-only packages. An approval therefore does not notice
+  a change to a package that is locked but unused.
+- A path dependency outside the workspace root has no relative path under
+  this scheme. The loader stops with an error for one; none of the fixtures
+  has one.
+
+## Design answers
+
+- [x] **Single `.rl` file or directory store, and why (Test 1).** Directory
+  store. A `.rl` file is locked whole by its writer, so a second process can
+  neither write nor read it. A directory store allows read-only and follow
+  opens beside the one writer, which the CLI and an agent server need.
+- [x] **How to open a directory store from Rust (Test 1).**
+  `Database::open(path)` with any path that is not `:memory:` and does not
+  end in `.rl`. `Database::open_read_only(path)` or
+  `Database::open_with(path, OpenOptions::with_mode(OpenMode::Follow))` for
+  the second process.
+- [x] **`snapshot` property on edges, or the fallback (Test 2).** Keep the
+  `snapshot` property on `DEPENDS_ON`. Path queries filtered on it are
+  correct and take 15 ms on the `public` fixture. The fallback was not built.
+- [x] **Whether manifest stubs are needed for isolated resolution (Test 3).**
+  Yes, always. Cargo rejects a manifest with no targets. Empty stub files are
+  enough and do not change the resolve graph.
+- [x] **What Cargo downloads during a simulation, and whether offline mode
+  works (Test 3).** On a cold cache, crates.io index data and the archive of
+  every resolved package for all platforms: 8.8 MB for `small`, 61.4 MB for
+  `bat`. On a warm cache, index data only. With `--offline` and a warm cache,
+  nothing, and the result is identical. Nothing downloaded is compiled or run.
+- [x] **Which code evaluates OSV version ranges, and its agreement with
+  `cargo audit` (Test 4).** Our own evaluator on top of the `semver` crate.
+  It matched `cargo audit` exactly on both lockfiles: 9 vulnerabilities and
+  7 informational notices.
+- [x] **How path dependencies are normalised in the digest (Test 5).** As
+  `path:<manifest directory relative to the workspace root>` with an empty
+  checksum, taken from `manifest_path`, never from the package id.
+
+## Recommendation
+
+| Test | Status |
+| --- | --- |
+| 1. Relate Rust crate basics | `PASS` |
+| 2. Two snapshots and a Cypher diff | `PASS` |
+| 3. Isolated candidate resolution (gate) | `PASS` |
+| 4. Advisory matching and Living Approvals | `PASS` (Part A and Part B) |
+| 5. Approval binding and drift detection | `PASS` |
+
+Tests 1 to 5 pass, so the decision table gives: **start the full build with
+the frozen P0 scope.** Approval binding stays in P0.
+
+Points to settle when the build starts, none of which blocks it:
+
+1. Relate 1.3.0 needs Rust 1.99 or later. The toolchain is pinned to 1.100.0
+   in `rust-toolchain.toml`.
+2. The draft schema needs a way to find a snapshot's workspace members. The
+   tests add `(Snapshot)-[:HAS_ROOT]->(Version)`.
+3. The digest in the brief binds the package list only. Decide whether an
+   approval should also bind dependency edges and features.
+4. The invalidation query in the brief stops recording once a decision has
+   one invalidation, and treats informational notices like vulnerabilities.
+5. The resolve graph from `cargo metadata` is smaller than `Cargo.lock`.
+   Decide which of the two the product treats as "the dependency set";
+   `cargo audit` uses the lockfile.
+6. The product should copy the manifests Cargo reports, not every file named
+   `Cargo.toml`, and must handle path dependencies outside the workspace root.
+
 ## Authorship log
 
 Kept for the AI-use disclosure the hackathon rules require.

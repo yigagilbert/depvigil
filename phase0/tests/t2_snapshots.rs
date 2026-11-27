@@ -15,30 +15,13 @@ use std::time::Instant;
 
 use common::graph::{
     create_schema, load_snapshot, params, resolve_copy, size_on_disk, string_column, string_list,
-    text, SnapshotData,
+    text, SnapshotData, DIFF_ADDED, DIFF_CHANGED, DIFF_REMOVED,
 };
 use common::{file_sha256, find_named, fixture, git_status};
 use relate::{Connection, Database, Value};
 
 const BASE: &str = "bat-baseline";
 const CAND: &str = "bat-candidate";
-
-const ADDED: &str = "
-MATCH (:Snapshot {id: $cand})-[:INCLUDES]->(v:Version)
-WHERE NOT EXISTS { (:Snapshot {id: $base})-[:INCLUDES]->(v) }
-RETURN v.purl AS purl ORDER BY purl";
-
-const REMOVED: &str = "
-MATCH (:Snapshot {id: $base})-[:INCLUDES]->(v:Version)
-WHERE NOT EXISTS { (:Snapshot {id: $cand})-[:INCLUDES]->(v) }
-RETURN v.purl AS purl ORDER BY purl";
-
-const CHANGED: &str = "
-MATCH (:Snapshot {id: $base})-[:INCLUDES]->(old:Version)-[:OF]->(p:Package),
-      (:Snapshot {id: $cand})-[:INCLUDES]->(new:Version)-[:OF]->(p)
-WHERE NOT EXISTS { (:Snapshot {id: $cand})-[:INCLUDES]->(old) }
-  AND NOT EXISTS { (:Snapshot {id: $base})-[:INCLUDES]->(new) }
-RETURN p.purl + ' ' + old.purl + ' -> ' + new.purl AS change ORDER BY change";
 
 /// The brief's sketch: a property map on the variable-length relationship.
 const PATH_PROPERTY: &str = "
@@ -162,9 +145,9 @@ fn t2_two_snapshots_and_diff() {
     println!("[t2] load candidate: {load_b:?}; store size with two snapshots (after checkpoint): {size_two} bytes");
 
     // Step 4: the same three sets with Cypher.
-    let added = timed(&mut conn, "added", ADDED, &mut checks);
-    let removed = timed(&mut conn, "removed", REMOVED, &mut checks);
-    let changed = timed(&mut conn, "changed", CHANGED, &mut checks);
+    let added = timed(&mut conn, "added", DIFF_ADDED, &mut checks);
+    let removed = timed(&mut conn, "removed", DIFF_REMOVED, &mut checks);
+    let changed = timed(&mut conn, "changed", DIFF_CHANGED, &mut checks);
     checks.push(("added: Cypher equals plain Rust".into(), added == expect_added));
     checks.push(("removed: Cypher equals plain Rust".into(), removed == expect_removed));
     checks.push(("changed: Cypher equals plain Rust".into(), changed == expect_changed));
