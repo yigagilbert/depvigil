@@ -45,6 +45,13 @@ pub fn fixture(name: &str) -> Option<PathBuf> {
     present.then_some(dir)
 }
 
+/// Prints a line that the test harness does not capture, so a skipped test
+/// is visible in a normal `cargo test` run.
+pub fn announce(message: &str) {
+    use std::io::Write;
+    let _ = writeln!(std::io::stderr(), "{message}");
+}
+
 /// Returns the fixture or skips the calling test with a clear message.
 #[macro_export]
 macro_rules! require_fixture {
@@ -52,10 +59,10 @@ macro_rules! require_fixture {
         match $crate::common::fixture($name) {
             Some(dir) => dir,
             None => {
-                eprintln!(
-                    "SKIPPED: fixture `{}` is not checked out; run `git submodule update --init` to include this test",
+                $crate::common::announce(&format!(
+                    "SKIPPED: this test needs the `{}` fixture, a git submodule that is not checked out. Run `git submodule update --init` to include it.",
                     $name
-                );
+                ));
                 return;
             }
         }

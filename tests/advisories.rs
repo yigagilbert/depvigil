@@ -151,9 +151,9 @@ fn assert_equals_cargo_audit(
             assert_eq!(ours, live, "findings equal cargo audit run now");
             println!("{fixture_name}: live cargo audit agrees");
         }
-        None => eprintln!(
+        None => common::announce(&format!(
             "NOTE: live cargo audit comparison skipped for `{fixture_name}` (needs the advisory-db submodule and cargo-audit); the recorded result was used"
-        ),
+        )),
     }
 }
 
