@@ -51,7 +51,7 @@ MATCH (s:Snapshot {id: $id})
 CREATE (project)-[:BASELINE {since: $now}]->(s)";
 
 const FIND_BASELINE: &str = "
-MATCH (:Project {name: $project})-[:BASELINE]->(s:Snapshot)
+MATCH (:Project)-[:BASELINE]->(s:Snapshot)
 RETURN s.id, s.kind, s.digest, s.precision, s.canonical, s.created_at";
 
 const PROJECT_NAME: &str = "MATCH (p:Project) RETURN p.name ORDER BY p.name LIMIT 1";
@@ -288,9 +288,9 @@ impl Store {
         rows.first().map(|row| Row(row).string(0)).transpose()
     }
 
-    /// The project's current baseline snapshot.
-    pub fn baseline(&mut self, project: &str) -> Result<Option<SnapshotRecord>> {
-        let rows = self.query(FIND_BASELINE, params([("project", text(project))]))?;
+    /// The current baseline snapshot. A store holds one project.
+    pub fn baseline(&mut self) -> Result<Option<SnapshotRecord>> {
+        let rows = self.query(FIND_BASELINE, Params::new())?;
         rows.first().map(|row| record(row)).transpose()
     }
 

@@ -442,7 +442,7 @@ impl<E: Ecosystem> Engine<E> {
         let project = self.project_name(&mut store)?;
         let load = store.latest_load()?.map(|l| l.id);
         let snapshot = store.save_snapshot(&project, &state, "baseline", &now)?;
-        let baseline_changed = store.baseline(&project)?.map(|b| b.id) != Some(snapshot.clone());
+        let baseline_changed = store.baseline()?.map(|b| b.id) != Some(snapshot.clone());
         if baseline_changed {
             store.set_baseline(&project, &snapshot, &now)?;
             self.link_advisories(&mut store, &state, &now, load.as_deref())?;
@@ -640,7 +640,7 @@ impl<E: Ecosystem> Engine<E> {
         let mut store = Store::open(&self.project)?;
         let project = self.project_name(&mut store)?;
         let baseline = store
-            .baseline(&project)?
+            .baseline()?
             .ok_or_else(|| Error::NotInitialised(self.project.clone()))?;
         if baseline.digest != current.digest() {
             return Err(Error::StaleBaseline);
@@ -974,9 +974,8 @@ impl<E: Ecosystem> Engine<E> {
     /// and the past decisions that mention it.
     pub fn why(&self, package: &str) -> Result<WhyReport> {
         let mut store = Store::open_read_only(&self.project)?;
-        let project = self.project_name(&mut store)?;
         let baseline = store
-            .baseline(&project)?
+            .baseline()?
             .ok_or_else(|| Error::NotInitialised(self.project.clone()))?;
         let mut versions = Vec::new();
         for (purl, active) in store.versions_of(&baseline.id, package)? {

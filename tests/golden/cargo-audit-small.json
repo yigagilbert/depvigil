@@ -1,0 +1,23 @@
+{
+  "tool": "cargo-audit 0.23.0",
+  "advisory_db_commit": "c5279d0b0c9e8b70df666eb6d1edbabcfd1176bd",
+  "lockfile": "fixtures/small/Cargo.lock",
+  "vulnerabilities": [
+    {
+      "advisory": "RUSTSEC-2020-0071",
+      "package": "time",
+      "version": "0.1.43"
+    },
+    {
+      "advisory": "RUSTSEC-2021-0003",
+      "package": "smallvec",
+      "version": "1.6.0"
+    },
+    {
+      "advisory": "RUSTSEC-2022-0013",
+      "package": "regex",
+      "version": "1.5.4"
+    }
+  ],
+  "notices": []
+}

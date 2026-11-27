@@ -1,0 +1,8 @@
+repository: https://github.com/rustsec/advisory-db
+branch: osv
+commit: 41c52cdab5fd303310c06be767cd48ad14970be9
+date: 2026-11-27T10:36:00Z
+downloaded: 2026-11-27
+advisories: 1552
+matching-main-commit: c5279d0b0c9e8b70df666eb6d1edbabcfd1176bd
+note: RustSec advisories for crates.io in OSV JSON, copied unchanged. Published by the RustSec project under its own licence terms.
