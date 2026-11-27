@@ -10,27 +10,83 @@ profile.
 | Item | Value |
 | --- | --- |
 | Operating system | macOS 26.2 (25C56), arm64 |
-| `rustc` | 1.88.0 (6b00bc388 2025-06-23) |
-| `cargo` | 1.88.0 (873a06493 2025-05-10) |
-| `relate` crate | 1.2.0, pinned as `=1.2.0` (see the note below) |
+| `rustc` | 1.100.0 (0ef1bc386 2026-11-09), pinned in `rust-toolchain.toml` |
+| `cargo` | 1.100.0 (3acc79c0c 2026-11-05) |
+| `relate` crate | 1.3.0, pinned as `=1.3.0`, no manual sub-crate pins |
 | `relate` CLI | 1.3.0, used only for inspecting stores by hand |
 | `cargo-audit` | 0.23.0 |
 | `small` fixture | this repository, commit `b83155e` |
 | `public` fixture | `sharkdp/bat` v0.25.0, commit `25f4f96ea3afb6fe44552f3b38ed8b1540ffa1b3`, 208 locked packages |
 | `advisories` fixture | `rustsec/advisory-db`, `osv` branch, commit `41c52cdab5fd303310c06be767cd48ad14970be9` (2026-11-27T10:36:00Z), 1,552 advisories, downloaded 2026-11-27 |
 
-**Relate version.** The brief's API facts were checked against Relate 1.3.0,
-but the `relate` crate 1.3.0 declares `rust-version = 1.99` and does not build
-on Rust 1.88.0. Version 1.2.0 is the newest release that supports Rust 1.88,
-so the tests run on 1.2.0. Re-running on 1.3.0 needs a toolchain upgrade to
-Rust 1.99 or later.
+Tests 1 and 3 were first run on Rust 1.88.0 with `relate` 1.2.0 and then
+re-run on the toolchain above. The earlier numbers are kept as notes under
+each test.
 
 **Fixture isolation.** `phase0/Cargo.toml` is its own workspace root and
 excludes `fixtures/`. `cargo metadata` for `phase0` lists one workspace member
 (`phase0`) and none of the fixture packages (`bat`, `small-app`, `small-core`,
-`marker`, `time`). `regex` 1.13.2 and `smallvec` 1.16.6 appear only as
-Relate's own dependencies, not at the fixture's pinned versions. No `target/`
-directory and no build-script marker file exist under `fixtures/`.
+`marker`, `time`). `regex` and `smallvec` appear only as Relate's own
+dependencies, not at the fixture's pinned versions. No `target/` directory
+and no build-script marker file exist under `fixtures/`.
+
+### Relate's minimum Rust version: evidence for a docs report
+
+The Relate docs state a minimum of Rust 1.88:
+
+- Rust tutorial (`/docs/get-started/rust/`), Prerequisites: "Rust 1.88 or
+  later, with cargo." The same page shows output from release 1.3.0.
+- "Use the Rust crate" guide: "Rust 1.88 or later and Cargo. The crate's
+  `rust-version` is 1.88."
+
+The published crate disagrees. `cargo info relate` reports
+`version: 1.3.0` and `rust-version: 1.99`.
+
+On Rust 1.88.0, `cargo add relate` in a new, empty crate printed:
+
+```text
+    Updating crates.io index
+warning: ignoring relate@1.3.0 (which requires rustc 1.99) as it is incompatible with rustc 1.88.0
+      Adding relate v1.2.0 to dependencies
+             Features:
+             + parquet
+             - research
+             - rkyv-codec
+    Updating crates.io index
+     Locking 160 packages to latest Rust 1.88.0 compatible versions
+      Adding ordered-float v5.4.0 (available: v5.5.1, requires Rust 1.90)
+      Adding relate v1.2.0 (available: v1.3.0, requires Rust 1.99)
+      Adding relate-catalog v1.2.0 (available: v1.3.0, requires Rust 1.99)
+      Adding relate-core v1.2.0 (available: v1.3.0, requires Rust 1.99)
+      Adding relate-engine-api v1.2.0 (available: v1.3.0, requires Rust 1.99)
+      Adding relate-error v1.2.0 (available: v1.3.0)
+      Adding relate-executor v1.2.0 (available: v1.3.0, requires Rust 1.99)
+      Adding relate-front v1.2.0 (available: v1.3.0, requires Rust 1.99)
+      Adding relate-ir v1.2.0 (available: v1.3.0, requires Rust 1.99)
+      Adding relate-markdown v1.2.0 (available: v1.3.0)
+      Adding relate-ontology v1.2.0 (available: v1.3.0)
+      Adding relate-planner v1.2.0 (available: v1.3.0, requires Rust 1.99)
+      Adding relate-storage v1.2.0 (available: v1.3.0, requires Rust 1.99)
+      Adding relate-write-local v1.2.0 (available: v1.3.0, requires Rust 1.99)
+```
+
+A second problem follows. The 1.2.0 that Cargo falls back to does not build
+from that lockfile either. Cargo locks `relate-parser` at 1.3.0 beside
+`relate-front` 1.2.0, and `cargo check` fails:
+
+```text
+note: `relate_parser::Expr` defined here
+   --> relate-parser-1.3.0/src/ast/expr.rs:16:1
+21  |     PathConstruct(Vec<Expr>),
+    |     ------------- not covered
+error: could not compile `relate-front` (lib) due to 3 previous errors
+```
+
+On Rust 1.88, `relate` 1.2.0 built only after `relate-parser` and
+`relate-splitter` were pinned to 1.2.0 by hand with `cargo update --precise`.
+`relate-model` and `relate-names` could not be pinned back, because the 1.2.0
+crates require `^1.3.0` of them. On Rust 1.100.0, `relate = "=1.3.0"` resolves
+all 17 `relate*` crates to 1.3.0 and builds with no pins.
 
 ## Test 1: Relate Rust crate basics
 
@@ -50,28 +106,25 @@ directory and no build-script marker file exist under `fixtures/`.
 | Shared reads | Pass. A read-only process reads the directory store while the writer holds it. |
 | Parameters | Pass. Every statement in the test and the helper is a constant; values travel only through `query_with_params`. |
 
-**Numbers**
+**Numbers** (`relate` 1.3.0, Rust 1.100.0)
 
 | Measurement | `.rl` file | Directory store |
 | --- | --- | --- |
-| Write 1,000 nodes in one transaction | 146.1 ms | 132.0 ms |
+| Write 1,000 nodes in one transaction | 141.0 ms | 129.2 ms |
 | Size on disk after close | 360,448 bytes | 27,909 bytes |
-| Reopen | 18.5 ms | 13.8 ms |
+| Reopen | 12.8 ms | 13.1 ms |
 
 A follower process opened with `OpenMode::Follow` saw a commit made after it
-opened within 76.8 ms, which includes the test's 20 ms polling interval.
+opened within 66.4 ms, which includes the test's 20 ms polling interval.
+
+*Earlier run on `relate` 1.2.0, Rust 1.88.0:* all checks passed with the same
+behaviour. Write 146.1 ms (`.rl`) and 132.0 ms (directory); sizes identical at
+360,448 and 27,909 bytes; reopen 18.5 ms and 13.8 ms; follower 76.8 ms.
 
 **Surprises**
 
-- The `relate` crate 1.3.0 needs Rust 1.99, while the Rust tutorial says
-  "Rust 1.88 or later" and shows output from 1.3.0. On Rust 1.88, `cargo add
-  relate` writes `relate = "1.2.0"` but still locks most `relate-*` sub-crates
-  at 1.3.0, and the build fails.
-- Getting 1.2.0 to build took three steps: `resolver = "3"` in the workspace,
-  a regenerated lockfile, and `cargo update --precise 1.2.0` for
-  `relate-parser` and `relate-splitter`. `relate-model` and `relate-names`
-  stay at 1.3.0 in the lockfile because the 1.2.0 crates require `^1.3.0` of
-  them.
+- The crate's real minimum Rust version is 1.99, not the documented 1.88. See
+  the evidence section above.
 - `Database::open` takes `&str`, not a `Path`.
 - A `.rl` file cannot be opened read-only while a writer holds it. The second
   process gets the same `storage locked` error as a second writer. This
@@ -150,20 +203,27 @@ The extra case is not one of the brief's five. It exercises the
 | Repeatable | Pass. The second isolated run gives the same resolve graph and the same `Cargo.lock`. |
 | Offline | Pass. With the cache warmed by the first run, `cargo add --offline` and `cargo metadata --offline` give the ground-truth graph in every case. |
 
-**Numbers**
+**Numbers** (Cargo 1.100.0)
 
 | # | Isolated, cold cache | Isolated, warm cache | Isolated, `--offline` | Ground truth | Crates downloaded (cold) | Download size |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 6.05 s | 2.33 s | 0.12 s | 1.18 s | 14 | 8,815,692 bytes |
-| 2 | 3.30 s | 1.21 s | 0.11 s | 1.08 s | 12 | 8,750,223 bytes |
-| 3 | 3.86 s | 1.36 s | 0.13 s | 1.25 s | 18 | 9,331,834 bytes |
-| 4 | 4.53 s | 1.12 s | 0.12 s | 1.05 s | 13 | 8,769,221 bytes |
-| 5 | 17.10 s | 1.74 s | 0.26 s | 5.54 s | 200 | 61,420,029 bytes |
-| extra | 2.70 s | 0.73 s | 0.15 s | 0.81 s | 12 | 8,744,572 bytes |
+| 1 | 3.39 s | 1.07 s | 0.09 s | 0.94 s | 14 | 8,815,692 bytes |
+| 2 | 3.44 s | 0.93 s | 0.08 s | 0.98 s | 12 | 8,750,223 bytes |
+| 3 | 3.28 s | 1.04 s | 0.10 s | 0.95 s | 18 | 9,331,834 bytes |
+| 4 | 3.28 s | 0.90 s | 0.08 s | 0.91 s | 13 | 8,769,221 bytes |
+| 5 | 13.45 s | 2.65 s | 0.26 s | 3.87 s | 200 | 61,420,029 bytes |
+| extra | 2.89 s | 0.68 s | 0.09 s | 0.72 s | 12 | 8,744,572 bytes |
 
 Wall time covers the manifest copy, the stubs, the change and
 `cargo metadata`. The ground-truth run always used the cache the cold run had
 filled, and downloaded nothing further.
+
+*Earlier run on Cargo 1.88.0:* all checks passed, with the same package and
+edge counts and the same download counts and sizes. Wall times, as cold /
+warm / offline / ground truth: case 1 6.05 / 2.33 / 0.12 / 1.18 s; case 2
+3.30 / 1.21 / 0.11 / 1.08 s; case 3 3.86 / 1.36 / 0.13 / 1.25 s; case 4
+4.53 / 1.12 / 0.12 / 1.05 s; case 5 17.10 / 1.74 / 0.26 / 5.54 s; extra
+2.70 / 0.73 / 0.15 / 0.81 s.
 
 **What Cargo downloads**
 
@@ -185,19 +245,18 @@ filled, and downloaded nothing further.
 - Cargo rejects a bare manifest copy: `no targets specified in the manifest`.
   Stubs are required in every case.
 - `cargo metadata` downloads crates for platforms other than the host. The
-  three Windows-only `winapi` crates account for most of the 8.7 MB fetched
+  three Windows-only `winapi` crates account for most of the 8.8 MB fetched
   for the `small` fixture on macOS.
 - `sharkdp/bat` contains a `Cargo.toml` that is syntax-highlighting test data
   (`tests/syntax-tests/source/TOML/Cargo.toml`). Copying "every `Cargo.toml`"
   picks it up and stubs it. It is outside the workspace, so the result is
   unaffected, but the product should copy only the manifests Cargo itself
   reports.
-- The `resolve` graph of `bat` has 201 packages after the change, fewer than
-  the 208 in its unchanged `Cargo.lock`, even though the change adds
-  packages. The likely cause is that the lockfile also covers optional
-  dependencies that no enabled feature uses; Test 2 should confirm this.
-  Tests that compare against `cargo audit`, which reads `Cargo.lock`, must
-  allow for the difference.
+- The `resolve` graph is smaller than the lockfile. For case 5 it has 201
+  packages while the `Cargo.lock` written by the same change has 210. The
+  nine extra lockfile packages are listed under the optional measurements
+  below. Tests that compare against `cargo audit`, which reads `Cargo.lock`,
+  must allow for the difference.
 - In a workspace with a virtual root manifest, `cargo add` needs `-p <member>`.
 
 **Design answers**
@@ -220,6 +279,74 @@ Path dependencies outside the workspace root, git dependencies, `[patch]`
 sections, alternative registries and vendored sources were not tested. A
 manifest-only copy would miss a path dependency that lives outside the
 copied tree.
+
+### Optional measurements: lockfile-only resolution and `--filter-platform`
+
+Evidence: `cargo test --test t3_optional -- --nocapture`, test file
+`tests/t3_optional.rs`. These are measurements, not pass criteria. Each
+variant ran once in its own manifest-only copy with its own empty
+`CARGO_HOME`, so every figure is for a cold cache. Host triple:
+`aarch64-apple-darwin`.
+
+| Variant | What runs after `cargo add` |
+| --- | --- |
+| `metadata` | `cargo metadata` (the Test 3 method) |
+| `filter-platform` | `cargo metadata --filter-platform aarch64-apple-darwin` |
+| `add-only` | Nothing. The `Cargo.lock` that `cargo add` wrote is parsed. |
+| `generate-lockfile` | `cargo generate-lockfile`, then `Cargo.lock` is parsed |
+
+**Case 1 (`small`, `cargo add getrandom@=0.2.15 -p small-app`)**
+
+| Variant | Wall time | Packages | Archives downloaded | Archive bytes | Index cache bytes |
+| --- | --- | --- | --- | --- | --- |
+| `metadata` | 3.57 s | 17 | 14 | 8,815,692 | 973,258 |
+| `filter-platform` | 2.95 s | 13 | 10 | 1,720,020 | 973,258 |
+| `add-only` | 1.71 s | 17 | 0 | 0 | 973,258 |
+| `generate-lockfile` | 2.28 s | 17 | 0 | 0 | 973,258 |
+
+**Case 5 (`public`, `cargo add petgraph@=0.6.5`)**
+
+| Variant | Wall time | Packages | Archives downloaded | Archive bytes | Index cache bytes |
+| --- | --- | --- | --- | --- | --- |
+| `metadata` | 20.62 s | 201 | 200 | 61,420,029 | 12,408,665 |
+| `filter-platform` | 11.11 s | 153 | 152 | 17,367,283 | 12,408,665 |
+| `add-only` | 3.52 s | 210 | 0 | 0 | 12,408,665 |
+| `generate-lockfile` | 18.67 s | 245 | 0 | 0 | 13,807,228 |
+
+The `metadata` variant also unpacked the archives into `CARGO_HOME`:
+119,641,732 bytes for case 1 and 573,527,235 bytes for case 5.
+
+**How the package sets differ from the `cargo metadata` result**
+
+- *`add-only`.* `cargo add` already writes the new `Cargo.lock`, and it
+  downloads no archives, only index data. Case 1: the same 17 packages.
+  Case 5: the 201 metadata packages plus nine more, all at the versions the
+  original lockfile pinned: `bit-set` 0.5.3, `bit-vec` 0.6.3, `execute`
+  0.2.13, `execute-command-macro` 0.1.9, `execute-command-macro-impl` 0.1.10,
+  `execute-command-tokens` 0.1.7, `fancy-regex` 0.11.0, `generic-array` 1.1.1
+  and `typenum` 1.17.0. The lockfile is a superset of the resolve graph.
+- *`generate-lockfile`.* It discards the existing lockfile and resolves every
+  dependency again at the newest allowed version. Case 1 gives the same 17
+  packages, but for case 5 the result has 245 packages, of which 195 are not
+  in the metadata result, and 151 metadata packages are missing. It does not
+  describe what the change would do to the real workspace, so it is the wrong
+  command for a simulation.
+- *`--filter-platform`.* It reduces downloads: 10 archives instead of 14 for
+  case 1 (1.7 MB instead of 8.8 MB), and 152 instead of 200 for case 5
+  (17.4 MB instead of 61.4 MB). The cost is that packages used only on other
+  platforms leave the graph: 4 for case 1 (`wasi`, `winapi` and its two
+  companion crates) and 48 for case 5 (mostly `windows-*` crates). An advisory
+  against one of those packages would then go unseen.
+
+**What this suggests for the build.** Reading the `Cargo.lock` that
+`cargo add` or `cargo update --precise` writes gives the full package list
+with versions, sources and checksums in a fraction of the time and with no
+archive downloads. It has no feature information, and its dependency lists
+are not split by kind or platform, so `cargo metadata` is still the source
+for the resolve graph used in Test 3. A two-stage simulation looks possible:
+lockfile first for the advisory check, `cargo metadata` only when the full
+graph is needed. This was measured on two cases only and is a suggestion, not
+a tested design.
 
 ## Authorship log
 

@@ -792,9 +792,9 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "ordered-float"
-version = "5.4.0"
+version = "5.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c860fd3227ca4ac3cc032e2cd20cba3f02ccdf4b610538f8ee6584d56bb62e96"
+checksum = "7f59006ce1e204c30956638535b74d317bca99477b9356dfaec54c37f6f600ab"
 dependencies = [
  "num-traits",
 ]
@@ -981,9 +981,9 @@ checksum = "d902046e6a28a1e4c3cab97258a0ce11e994903f01c2d97a9447a0b3df85f4f6"
 
 [[package]]
 name = "relate"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19c147e1d107458b577e56492e09ca904cd384f6fe2ace8a179f65ff487fb3fe"
+checksum = "67d482ca0bb418e57a82a012fa1eb4001d1d8a9bb6009a84cb701dde25305904"
 dependencies = [
  "indexmap",
  "relate-catalog",
@@ -1008,9 +1008,9 @@ dependencies = [
 
 [[package]]
 name = "relate-catalog"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c373eceac61196eead5a2196f74bb46b637e46c5350dbfc89848760bb767f262"
+checksum = "f73d614ff0ac8a8c5469ac1c6c70008d3f8c471a28a6ab47b72c6136e6af6875"
 dependencies = [
  "relate-core",
  "relate-model",
@@ -1019,9 +1019,9 @@ dependencies = [
 
 [[package]]
 name = "relate-core"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8d3e6803179db54df0aaee84d0f3c8248b8c7b4dea8ccd76cafab830942e7bd"
+checksum = "8e0b08071808ca3f3c427379f7b9b3963235a894863eaa6285b8f82e7d400d31"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -1035,9 +1035,9 @@ dependencies = [
 
 [[package]]
 name = "relate-engine-api"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5301da714318a06d14872a0998aebad0d740f35bf6a03ffe50443935238ca21"
+checksum = "9434704bd2f9b25820146225da8f1e6b1e5dfc680222a9a846975c26ded50583"
 dependencies = [
  "relate-catalog",
  "relate-core",
@@ -1052,9 +1052,9 @@ dependencies = [
 
 [[package]]
 name = "relate-error"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c02a815db5f5a7b2b736700a8cd4cab5637ac7752d89e657cc357ea1d6afe2a"
+checksum = "dd0682f8cfcb7b32808fb9ca773b5845372df167a3ed785fb9c84bee572c64a7"
 dependencies = [
  "relate-core",
  "relate-parser",
@@ -1062,9 +1062,9 @@ dependencies = [
 
 [[package]]
 name = "relate-executor"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "673a5da7103fac0d1860e1db374392bd56e71a982c23f1b1a3a317a4ec9649a0"
+checksum = "d5879982c8ef8c52b7714f4ee98543407fef84e66b0bff87375addd3d4eabe7a"
 dependencies = [
  "chrono",
  "dashmap",
@@ -1093,9 +1093,9 @@ dependencies = [
 
 [[package]]
 name = "relate-front"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7ea40656e7505efaa91f52cc0e922fd9714008e64fba60a6b1ac1b2b19d6a548"
+checksum = "d2d427170f58ee4f2c8ed5af2386fb0dd0b3af9868cf2636b31e315fbe182ae0"
 dependencies = [
  "relate-core",
  "relate-error",
@@ -1108,9 +1108,9 @@ dependencies = [
 
 [[package]]
 name = "relate-ir"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "415ffd36cf0aa924ed9803a59a6355235e448a92035b067f12489712afe8bd8e"
+checksum = "2bc6ca92e586e2a904c0cfa8655997980759062d8c64a4107744b3966bfff760"
 dependencies = [
  "relate-core",
  "relate-names",
@@ -1119,13 +1119,14 @@ dependencies = [
 
 [[package]]
 name = "relate-markdown"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "adb87f0888d7163a5c6175801378af4ff56f64d48d9b81d46c7391e22c218977"
+checksum = "ada2435fdcd33a03ddc4529f1ef101a2ba5489bf1bfc508245aef881b07e1c3a"
 dependencies = [
  "relate-core",
  "saphyr-parser",
  "serde_json",
+ "unicode-normalization",
 ]
 
 [[package]]
@@ -1148,9 +1149,9 @@ checksum = "c8954d0e15413ae7164f835c3a393c27890cfc2f3dc887238854760325c8629d"
 
 [[package]]
 name = "relate-ontology"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6237a68404fd8aa114eb9a7b8e58906a90250ca686adda5beb408711a5d9de05"
+checksum = "520d780cee53d85670ed0028044f26cd86ab7c4e341ca1a3337cb83e18835706"
 dependencies = [
  "indexmap",
  "relate-core",
@@ -1165,9 +1166,9 @@ dependencies = [
 
 [[package]]
 name = "relate-parser"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcf69e5eedc18fa80f92f3ebd90ceba04b5c6f3ed5c704e1cc0632d6d311d58e"
+checksum = "2b914f3dcdb46db904a19f8c85325f691de0fd7772270a23e8f19cff9b9118bf"
 dependencies = [
  "relate-model",
  "relate-names",
@@ -1175,9 +1176,9 @@ dependencies = [
 
 [[package]]
 name = "relate-planner"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d88a42ae564d26640a5451c56bf93e4b78fac99e3b5f8ddddefb7b7ca08c1c84"
+checksum = "34dccb739cd6beceafba73f12283f7f88b9514a37e8400e197243c9a480938b1"
 dependencies = [
  "relate-catalog",
  "relate-core",
@@ -1190,15 +1191,15 @@ dependencies = [
 
 [[package]]
 name = "relate-splitter"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d7eea3504936b1d5873b2ac224723b546594beecc87eef7006d9b5ba209b40c"
+checksum = "462b0026cf67447e9d2acba162d8062a2d29e1239b0c7c37763a7dbec893565d"
 
 [[package]]
 name = "relate-storage"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6caf6f3135b6599f2f1b319e4f8a2743abf437cb9018c0e7658080b2c6b5b91"
+checksum = "cd398ce4b09ce03efa5e49ad1fd8c77964a57b596b4828216c97f19b152111ce"
 dependencies = [
  "arrow",
  "bytes",
@@ -1221,9 +1222,9 @@ dependencies = [
 
 [[package]]
 name = "relate-write-local"
-version = "1.2.0"
+version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "148af3394bcf1b1fd3e06e26068120fe4d408f6f57c961c2f2a9f9a0b116d0db"
+checksum = "d928df00bf8f2de17673537bd2b3bb0dbfde8baa50f4ccde206306ac5ba0603f"
 dependencies = [
  "relate-core",
  "relate-engine-api",
