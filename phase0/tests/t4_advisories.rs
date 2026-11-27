@@ -411,7 +411,7 @@ fn t4_advisory_matching_and_living_approvals() {
     let lock_before = file_sha256(&small_lock);
 
     // ---- Advisory data -----------------------------------------------------
-    let advisories = load_osv(&fixture("advisories").join("crates"));
+    let advisories = load_osv(&fixture("advisories").join("osv"));
     let osv_ids: BTreeSet<String> = advisories.iter().map(|a| a.id.clone()).collect();
     let db_ids = advisory_db_ids(&advisory_db);
     let only_osv: Vec<&String> = osv_ids.difference(&db_ids).collect();

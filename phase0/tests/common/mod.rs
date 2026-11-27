@@ -23,8 +23,15 @@ const ALLOWED_CARGO: [&str; 5] = ["add", "update", "generate-lockfile", "metadat
 const SKIPPED_DIRS: [&str; 2] = [".git", "target"];
 
 pub fn fixture(name: &str) -> PathBuf {
+    // Fixtures moved to the repository root in Milestone 1.
+    let (dir, name) = match name {
+        "public" => ("fixtures", "bat"),
+        "advisories" => ("data", "advisories"),
+        other => ("fixtures", other),
+    };
     Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("fixtures")
+        .join("..")
+        .join(dir)
         .join(name)
         .canonicalize()
         .expect("fixture exists")

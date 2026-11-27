@@ -10,7 +10,7 @@ description = "Phase 0 feasibility tests for the depvigil dependency decision en
 # must never be compiled or resolved as part of this crate.
 [workspace]
 resolver = "3"
-exclude = ["fixtures"]
+exclude = []
 
 [dependencies]
 relate = "=1.3.0"
