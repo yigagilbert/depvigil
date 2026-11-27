@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # A plain clone with no submodules. Tests that need the bat or advisory-db
+  # fixtures skip themselves with a message.
+  plain-clone:
+    name: fmt, clippy, test (plain clone)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned toolchain
+        run: rustup show
+      - name: Cache the Cargo registry and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: plain-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: plain-${{ runner.os }}-
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      # The tests simulate dependency changes with `cargo add`, which needs
+      # network access to the crates.io index.
+      - run: cargo test
+
+  # The same tests with the submodule fixtures and cargo-audit present, so
+  # the comparisons against ground truth run as well.
+  with-fixtures:
+    name: test (submodules and cargo-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install the pinned toolchain
+        run: rustup show
+      - name: Cache the Cargo registry, build and cargo-audit
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin/cargo-audit
+            target
+          key: full-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: full-${{ runner.os }}-
+      - name: Install cargo-audit
+        run: command -v cargo-audit || cargo install cargo-audit --locked --version 0.23.0
+      - run: cargo test

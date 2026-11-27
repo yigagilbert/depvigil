@@ -1,9 +1,14 @@
 # Phase 0 results
 
 Feasibility tests for the dependency decision engine, as specified in
-[`PHASE0_BRIEF.md`](../PHASE0_BRIEF.md). Every number below comes from a test
+[`PHASE0_BRIEF.md`](PHASE0_BRIEF.md). Every number below comes from a test
 run on the machine described here. Timings are from the unoptimised `test`
 profile.
+
+> This report was written on 27 November 2026 against the Phase 0 layout,
+> where the tests lived in a `phase0/` crate. File paths below refer to that
+> layout. The tests have since moved to `tests/` and the fixtures to
+> `fixtures/` and `data/advisories/`.
 
 ## Environment
 
@@ -450,7 +455,7 @@ is in that lockfile, and that `cargo metadata` did not rewrite the lockfile.
 | extra | 15 | 15 | 0 | 0 |
 
 The extra case uses `cargo update --precise` instead of `cargo add`. This is
-the property the two-step simulation in `DECISIONS.md` relies on.
+the property the two-step simulation (ADR 0006) relies on.
 
 ## Test 4: advisory matching and Living Approvals
 
@@ -684,7 +689,7 @@ Tests 1 to 5 pass, so the decision table gives: **start the full build with
 the frozen P0 scope.** Approval binding stays in P0.
 
 These points were open at the end of Phase 0. They are now decided in
-[`DECISIONS.md`](../DECISIONS.md):
+the [decision records](../adr/README.md):
 
 1. Relate 1.3.0 needs Rust 1.99 or later. The toolchain is pinned to 1.100.0
    in `rust-toolchain.toml`.
@@ -709,5 +714,5 @@ Kept for the AI-use disclosure the hackathon rules require.
 | `PHASE0_BRIEF.md` | Project author |
 | `phase0/` crate, tests, helper binary and `small` fixture | Coding agent (Claude Code), directed and reviewed by the project author |
 | `RESULTS.md` | Coding agent, from test output |
-| `DECISIONS.md` | Decisions by the project author; written up by the coding agent |
+| Decision records (`docs/adr/`) | Decisions by the project author; written up by the coding agent |
 | `fixtures/public`, `fixtures/advisory-db`, `fixtures/advisories/crates` | Third-party data, unmodified |
