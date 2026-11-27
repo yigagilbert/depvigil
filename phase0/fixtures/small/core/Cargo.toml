@@ -1,0 +1,10 @@
+[package]
+name = "small-core"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+marker = { path = "../vendor/marker" }
+cfg-if = "1"
+time = "=0.1.43"
