@@ -21,8 +21,11 @@ const T2: &str = "2026-11-27T11:00:00Z";
 /// `advisory package version`.
 type Findings = BTreeSet<String>;
 
-fn advisories_dir() -> PathBuf {
-    repo_root().join("data").join("advisories").join("osv")
+fn advisory_snapshot() -> PathBuf {
+    repo_root()
+        .join("data")
+        .join("advisories")
+        .join("rustsec-osv.jsonl.gz")
 }
 
 /// What the store says about the baseline: live vulnerabilities and notices.
@@ -114,7 +117,7 @@ fn assert_equals_cargo_audit(
     let project = project_from(fixture_dir);
     engine_at(&project.dir, T0).init().expect("init");
     let report = engine_at(&project.dir, T1)
-        .load_advisories(&advisories_dir(), None)
+        .load_advisories(&advisory_snapshot(), None)
         .expect("load advisories");
     println!(
         "{fixture_name}: loaded {} advisories ({} vulnerabilities, {} notices, {} withdrawn), {} AFFECTS created",
@@ -172,11 +175,11 @@ fn loading_twice_adds_no_relationship_and_keeps_first_seen() {
     let project = project_from(&fixture);
     engine_at(&project.dir, T0).init().expect("init");
     let first = engine_at(&project.dir, T1)
-        .load_advisories(&advisories_dir(), None)
+        .load_advisories(&advisory_snapshot(), None)
         .expect("first load");
     assert_eq!(first.new_affects, 3);
     let second = engine_at(&project.dir, T2)
-        .load_advisories(&advisories_dir(), None)
+        .load_advisories(&advisory_snapshot(), None)
         .expect("second load");
     assert_eq!(second.new_affects, 0);
     assert_eq!(second.removed_affects, 0);
@@ -202,7 +205,7 @@ fn published_before_loads_only_earlier_advisories() {
     let project = project_from(&fixture);
     engine_at(&project.dir, T0).init().expect("init");
     let report = engine_at(&project.dir, T1)
-        .load_advisories(&advisories_dir(), Some("2022-03-08"))
+        .load_advisories(&advisory_snapshot(), Some("2022-03-08"))
         .expect("load");
     assert_eq!(
         report.load.published_before.as_deref(),
@@ -298,8 +301,8 @@ fn load_from_the_command_line() {
     let fixture = require_fixture!("small");
     let project = project_from(&fixture);
     assert_eq!(run_cli(&project.dir, Some(T0), &["init"]).code, 0);
-    let dir = advisories_dir();
-    let dir = dir.to_str().unwrap();
+    let snapshot = advisory_snapshot();
+    let dir = snapshot.to_str().unwrap();
 
     let output = run_cli(
         &project.dir,

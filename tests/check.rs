@@ -29,7 +29,10 @@ fn prepared(fixture: &Path) -> Project {
     let project = project_from(fixture);
     engine_at(&project.dir, T0).init().expect("init");
     engine_at(&project.dir, T1)
-        .load_advisories(&repo_root().join("data/advisories/osv"), None)
+        .load_advisories(
+            &repo_root().join("data/advisories/rustsec-osv.jsonl.gz"),
+            None,
+        )
         .expect("load advisories");
     project
 }

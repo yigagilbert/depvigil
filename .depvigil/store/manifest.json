@@ -1,0 +1,305 @@
+{
+  "format_version": 5,
+  "next_node_id": 1947,
+  "next_rel_id": 2507,
+  "checkpoint_lsn": 17,
+  "commit_ts": 18,
+  "node_parts": [
+    {
+      "path": "nodes/0-262144-2f285fca5922506222546751517121f7.parquet",
+      "id_lo": 0,
+      "id_hi": 262144,
+      "rows": 1947,
+      "bytes": 204453
+    }
+  ],
+  "rel_parts": [
+    {
+      "path": "relationships/0-262144-a3fb72e014dc18b6ebe349f5c8c39d0e.parquet",
+      "id_lo": 0,
+      "id_hi": 262144,
+      "rows": 2506,
+      "bytes": 27183
+    }
+  ],
+  "bytes_per_node": 108.29539082785435,
+  "bytes_per_rel": 11.022085546135099,
+  "codec": "parquet",
+  "indexes": [
+    {
+      "name": "advisory_id",
+      "label": "Advisory",
+      "property": "id#RANGE#advisory_id"
+    },
+    {
+      "name": "advisory_load_id",
+      "label": "AdvisoryLoad",
+      "property": "id#RANGE#advisory_load_id"
+    },
+    {
+      "name": "decision_id",
+      "label": "Decision",
+      "property": "id#RANGE#decision_id"
+    },
+    {
+      "name": "invalidation_id",
+      "label": "Invalidation",
+      "property": "id#RANGE#invalidation_id"
+    },
+    {
+      "name": "package_purl",
+      "label": "Package",
+      "property": "purl#RANGE#package_purl"
+    },
+    {
+      "name": "policy_id",
+      "label": "Policy",
+      "property": "id#RANGE#policy_id"
+    },
+    {
+      "name": "project_name",
+      "label": "Project",
+      "property": "name#RANGE#project_name"
+    },
+    {
+      "name": "snapshot_id",
+      "label": "Snapshot",
+      "property": "id#RANGE#snapshot_id"
+    },
+    {
+      "name": "version_purl",
+      "label": "Version",
+      "property": "purl#RANGE#version_purl"
+    }
+  ],
+  "constraints": [
+    {
+      "name": "advisory_id",
+      "relationship": false,
+      "label": "Advisory",
+      "properties": [
+        "id"
+      ],
+      "kind": "unique",
+      "property_type": null
+    },
+    {
+      "name": "advisory_load_id",
+      "relationship": false,
+      "label": "AdvisoryLoad",
+      "properties": [
+        "id"
+      ],
+      "kind": "unique",
+      "property_type": null
+    },
+    {
+      "name": "decision_id",
+      "relationship": false,
+      "label": "Decision",
+      "properties": [
+        "id"
+      ],
+      "kind": "unique",
+      "property_type": null
+    },
+    {
+      "name": "invalidation_id",
+      "relationship": false,
+      "label": "Invalidation",
+      "properties": [
+        "id"
+      ],
+      "kind": "unique",
+      "property_type": null
+    },
+    {
+      "name": "package_purl",
+      "relationship": false,
+      "label": "Package",
+      "properties": [
+        "purl"
+      ],
+      "kind": "unique",
+      "property_type": null
+    },
+    {
+      "name": "policy_id",
+      "relationship": false,
+      "label": "Policy",
+      "properties": [
+        "id"
+      ],
+      "kind": "unique",
+      "property_type": null
+    },
+    {
+      "name": "project_name",
+      "relationship": false,
+      "label": "Project",
+      "properties": [
+        "name"
+      ],
+      "kind": "unique",
+      "property_type": null
+    },
+    {
+      "name": "snapshot_id",
+      "relationship": false,
+      "label": "Snapshot",
+      "properties": [
+        "id"
+      ],
+      "kind": "unique",
+      "property_type": null
+    },
+    {
+      "name": "version_purl",
+      "relationship": false,
+      "label": "Version",
+      "properties": [
+        "purl"
+      ],
+      "kind": "unique",
+      "property_type": null
+    }
+  ],
+  "theater": {
+    "databases": {
+      "neo4j": [
+        25,
+        false
+      ],
+      "system": [
+        25,
+        false
+      ],
+      "system_ontologies": [
+        25,
+        false
+      ]
+    },
+    "index_details": {
+      "advisory_id": {
+        "kind": "Range",
+        "relationship": false,
+        "labels": [
+          "Advisory"
+        ],
+        "properties": [
+          "id"
+        ],
+        "with_properties": []
+      },
+      "advisory_load_id": {
+        "kind": "Range",
+        "relationship": false,
+        "labels": [
+          "AdvisoryLoad"
+        ],
+        "properties": [
+          "id"
+        ],
+        "with_properties": []
+      },
+      "decision_id": {
+        "kind": "Range",
+        "relationship": false,
+        "labels": [
+          "Decision"
+        ],
+        "properties": [
+          "id"
+        ],
+        "with_properties": []
+      },
+      "invalidation_id": {
+        "kind": "Range",
+        "relationship": false,
+        "labels": [
+          "Invalidation"
+        ],
+        "properties": [
+          "id"
+        ],
+        "with_properties": []
+      },
+      "package_purl": {
+        "kind": "Range",
+        "relationship": false,
+        "labels": [
+          "Package"
+        ],
+        "properties": [
+          "purl"
+        ],
+        "with_properties": []
+      },
+      "policy_id": {
+        "kind": "Range",
+        "relationship": false,
+        "labels": [
+          "Policy"
+        ],
+        "properties": [
+          "id"
+        ],
+        "with_properties": []
+      },
+      "project_name": {
+        "kind": "Range",
+        "relationship": false,
+        "labels": [
+          "Project"
+        ],
+        "properties": [
+          "name"
+        ],
+        "with_properties": []
+      },
+      "snapshot_id": {
+        "kind": "Range",
+        "relationship": false,
+        "labels": [
+          "Snapshot"
+        ],
+        "properties": [
+          "id"
+        ],
+        "with_properties": []
+      },
+      "version_purl": {
+        "kind": "Range",
+        "relationship": false,
+        "labels": [
+          "Version"
+        ],
+        "properties": [
+          "purl"
+        ],
+        "with_properties": []
+      }
+    },
+    "index_options": {
+      "advisory_id": {},
+      "advisory_load_id": {},
+      "decision_id": {},
+      "invalidation_id": {},
+      "package_purl": {},
+      "policy_id": {},
+      "project_name": {},
+      "snapshot_id": {},
+      "version_purl": {}
+    },
+    "graph_types": {},
+    "current_graph_type": {
+      "node_types": [],
+      "edge_types": [],
+      "constraints": [],
+      "drop_constraint_names": []
+    },
+    "derived_constraints": {}
+  },
+  "query_engine": "in-memory",
+  "write_engine": "local"
+}

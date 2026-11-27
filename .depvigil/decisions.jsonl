@@ -1,0 +1,1 @@
+{"type":"decision","id":"D0001","verdict":"approved","decided_at":"2026-11-27T14:57:03.455Z","change":"add flate2","digest":"c67317f1d2ad61b2cc49b3fc98cc8f1ff0a51ca587aeabc1c4aa3118e143e669","mode":"introduced","precision":"lockfile","baseline":"snap-7fbbdf8a75e003e0","candidate":"snap-c67317f1d2ad61b2","advisory_load":"load-0001","rejected_by":[],"warnings":[]}

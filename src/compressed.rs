@@ -3,13 +3,12 @@
 use std::io::Read;
 use std::path::Path;
 
-use crate::advisory::Advisory;
-use crate::{Error, Result};
+use flate2::read::GzDecoder;
 
-/// Reads gzip-compressed JSON Lines.
-pub(crate) fn read_gzip_json_lines(_reader: impl Read, origin: &Path) -> Result<Vec<Advisory>> {
-    Err(Error::InvalidInput(format!(
-        "{} is gzip-compressed, which this build cannot read yet",
-        origin.display()
-    )))
+use crate::advisory::{read_json_lines, Advisory};
+use crate::Result;
+
+/// Reads gzip-compressed JSON Lines: one OSV record per line.
+pub(crate) fn read_gzip_json_lines(reader: impl Read, origin: &Path) -> Result<Vec<Advisory>> {
+    read_json_lines(GzDecoder::new(reader), origin)
 }

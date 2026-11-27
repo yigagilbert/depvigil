@@ -1,0 +1,9 @@
+CREATE CONSTRAINT `advisory_id` FOR (n:`Advisory`) REQUIRE (n.`id`) IS UNIQUE;
+CREATE CONSTRAINT `advisory_load_id` FOR (n:`AdvisoryLoad`) REQUIRE (n.`id`) IS UNIQUE;
+CREATE CONSTRAINT `decision_id` FOR (n:`Decision`) REQUIRE (n.`id`) IS UNIQUE;
+CREATE CONSTRAINT `invalidation_id` FOR (n:`Invalidation`) REQUIRE (n.`id`) IS UNIQUE;
+CREATE CONSTRAINT `package_purl` FOR (n:`Package`) REQUIRE (n.`purl`) IS UNIQUE;
+CREATE CONSTRAINT `policy_id` FOR (n:`Policy`) REQUIRE (n.`id`) IS UNIQUE;
+CREATE CONSTRAINT `project_name` FOR (n:`Project`) REQUIRE (n.`name`) IS UNIQUE;
+CREATE CONSTRAINT `snapshot_id` FOR (n:`Snapshot`) REQUIRE (n.`id`) IS UNIQUE;
+CREATE CONSTRAINT `version_purl` FOR (n:`Version`) REQUIRE (n.`purl`) IS UNIQUE;
